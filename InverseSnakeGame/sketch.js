@@ -1,26 +1,36 @@
 /*
 TODO:
 	- Wrapping Walls?
+	- Pause/flash when eaten
+	- Fix about wording
 */
 
 // Snake Game AI Algorithm Game
 
-const MODES = ['menu', 'game'];
 let MODE = 'menu';
-let DIFFICULTY = 'easy';
+let DIFFICULTY = 'Easy';
 let PAUSE = false;
 
-let algorithm = 'hamilton';
+let algorithm = 'alphasnake';
 
 let DEBUG = false;
 
-const scl = 30;  // Sizing
+const scl = 35;  // Sizing
 const cols = 30; // Width
 const rows = 20; // Height
-const out = 6;   // Outline
+const out = scl / 5;   // Outline
+
+// Hardcoded menu parameters
+console.assert(cols == 30);
+console.assert(rows == 20);
+
+// Adaptive scaling factor for all sizes (built hardcoded to scl = 30)
+const cnst = scl / 30;
 
 let moves = 0;
 let highScore = 0;
+let snakeTraps = 0;
+let eaten = 0;
 
 let menu;
 
@@ -29,65 +39,77 @@ let snake;
 let cycle;
 let food;
 
+let frameSpeed;
+
+const difficultyFrameSpeeds = {
+	'Easy': {
+		frameSpeed: 12,
+		increase: 0
+	},
+
+	'Hard': {
+		frameSpeed: 15,
+		increase: 0.2,
+	},
+
+	'Impossible': {
+		frameSpeed: 24,
+		increase: 0.5
+	}
+}
+
+let shrinkFrame = null;
+let deadFrame = 0;
+let deadPause = 40;
+
 let speed = 1;
-let initialSpeed = 17;
-let frameSpeed = 17;
-let frameSpeedIncrease = 0;
-
-let shrinkFrame = 100;
-
 let frame = 0;
 
 let font;
-
 function preload() {
-	font = loadFont('CnstrctRegular-m83v.ttf');
+	font = loadFont('assets/CnstrctRegular-m83v.ttf');
 }
 
 function keyPressed() {
 	
-	if (keyCode == 84) {
-		DEBUG = !DEBUG;
-	} else if (keyCode == 32) {
-		PAUSE = !PAUSE
-	}
+	if (keyCode == 32) PAUSE = !PAUSE
 
 	if (DEBUG) {
-		if (key === 's') speed = 10;
+		if (key == 'm') speed = 10;
 	}
 
 }
 
 function keyReleased() {
 	if (DEBUG) {
-		if (key === 's') speed = 1;
+		if (key === 'm') speed = 1;
 	}
 }
 
-const getAvgPos = function(one, two) {
+function getAvgPos(one, two) {
 	const avgX = (one.x + two.x) / 2;
 	const avgY = (one.y + two.y) / 2;
 	return createVector(avgX, avgY);
 }
 
-const vectorIsInArray = function(array, vector) {
+function vectorIsInArray(array, vector) {
 	for (let i = 0; i < array.length; i++) {
 		if (array[i].equals(vector)) return true;
 	} return false;
 }
 
-const shuffle = function(array) {
-	array.sort(() => random(1) * 2 - 1);
+function shuffle(array) {
+	array.sort(() => random(1));
 	return array;
 }
 
 function setup() {
-	createCanvas(cols * scl, rows * scl);
+	
+	let canvas = createCanvas(cols * scl, rows * scl);
+	canvas.parent('inversnake-canvas');
 
 	textFont(font);
 	textAlign(LEFT, TOP);
-
-	menu = new Menu();
 
 	grid = new Grid(cols, rows, scl);
 	grid.createGrid();
@@ -98,33 +120,86 @@ function setup() {
 
 	food = new Food(grid);
 	snake = new Snake(grid, food);
+	
+	menu = new Menu();
+
+	snakeTraps = 0;
+	eaten = 0;
+	moves = 0;
+	highScore = 0;
 
 }
 
 function showInfo() {
 	// Display information to screen over snake
 	fill(255);
-	textSize(16);
-	text(`Score: ${moves}`, width - 106, 10);
-	text(`High Score: ${highScore}`, width - 153, 30);
-	text(`Snake Length: ${snake.body.length}`, width - 175, height - 30);
-	textSize(30);
+	textSize(16 * cnst);
+	textAlign(RIGHT);
+
+	// text(`Moves: ${moves}`, width - 120 * cnst, height - 55 * cnst);
+	// text(`Max Moves: ${highScore}`, width - 167 * cnst, height - 30 * cnst);
+	text(`Snake Traps: ${snakeTraps}`, width - 20 * cnst, 10 * cnst);
+	text(`Times Eaten: ${eaten}`, width - 20 * cnst, 30 * cnst);
+	// text(`Snake Length: ${snake.drawnLength}`, width - 189 * cnst, height - 30 * cnst);
+
+	textAlign(LEFT);
+
+	if (snake.dead) {
+		textSize(30 * cnst);
+		fill(255);
+		textAlign(CENTER);
+		text('Snake Trapped!', width / 2, 30 * cnst);
+		textAlign(LEFT);
+	}
 
 	if (PAUSE) {
 		background('rgba(10, 10, 10, 0.5)');
 		fill(100)
-		rect(width / 2 - 100, height / 3, 50, height / 3);
-		rect(width / 2 + 50, height / 3, 50, height / 3);
+		rect(width / 2 - 70, height / 3, 50 * cnst, height / 3);
+		rect(width / 2 + 35, height / 3, 50 * cnst, height / 3);
 	}
+
+	let backZone = [20 * cnst, 20 * cnst, 80 * cnst, 25 * cnst];
+	textSize(20 * cnst);
+	if (inZone([createVector(mouseX, mouseY)].concat(backZone))) {
+		fill(255);
+		if (mouseIsPressed) {
+			MODE = 'menu';
+			setup();
+		}
+	} else fill(150);
+	text('< Menu', backZone[0], backZone[1]);
+
 }
 
+function gameInitialize() {
+	// Make sure initializations are set properly
+	PAUSE = false;
+	frameSpeed = difficultyFrameSpeeds[DIFFICULTY].frameSpeed
+	algorithm = DIFFICULTY == 'Impossible' ? 'hamilton' : 'alphasnake'
+}
+
+function updateFood() {
+	let movement = createVector(0, 0)
+	if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) {
+		movement.add(createVector(-scl, 0));
+	} if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) {
+		movement.add(createVector(scl, 0))
+	} if (keyIsDown(UP_ARROW) || keyIsDown(87)) {
+		movement.add(createVector(0, -scl))
+	} if (keyIsDown(DOWN_ARROW) || keyIsDown(83)) {
+		movement.add(createVector(0, scl))
+	}
+
+	food.move(movement, snake.body.concat([snake.pos]));
+
+}
 
 function showGame() {
 	/* Run game update */
 
-	// Game will speed up
-	if (DIFFICULTY == 'hard') {
-		frameSpeedIncrease = 1;
+	if (moves == 0) {
+		gameInitialize();
 	}
 
 	frameRate(frameSpeed);
@@ -135,6 +210,8 @@ function showGame() {
 		return;
 	}
 
+	// Hold down my initials for verbose debug mode
+	DEBUG = keyIsDown(84) && keyIsDown(74) && keyIsDown(75);
 	if (DEBUG) {
 		grid.show();
 		cycle.show(showPrim = false, showCycle = true);
@@ -142,47 +219,55 @@ function showGame() {
 
 	for (let s = 0; s < speed; s++) {
 
-		let movement = createVector(0, 0)
 		
-		if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) {
-			movement.add(createVector(-scl, 0));
-		} if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) {
-			movement.add(createVector(scl, 0))
-		} if (keyIsDown(UP_ARROW) || keyIsDown(87)) {
-			movement.add(createVector(0, -scl))
-		} if (keyIsDown(DOWN_ARROW) || keyIsDown(83)) {
-			movement.add(createVector(0, scl))
-		}
+		if (!snake.dead) {
 
-		food.move(movement, snake.body.concat([snake.pos]));
+			if (algorithm == 'alphasnake') {
+				snake.AlphaSnake();
+			} else if (algorithm == 'hamilton') {
+				snake.ShortcutHamilton();
+			}
+			// snake.FollowCycle();
 
-		if (algorithm == 'alphasnake') {
-			snake.AlphaSnake();
-		} else if (algorithm == 'hamilton') {
-			snake.ShortcutHamilton();
-		}
-		// snake.FollowCycle();
+			snake.run();
 
-		snake.run();
+			updateFood();
+			
+			// Scoring
+			moves++;
+			highScore = max(moves, highScore);
+			if (snake.justAte) {
+				eaten++;
+				moves = 1;
+				frameSpeed += difficultyFrameSpeeds[DIFFICULTY].increase;
+			}
 
-		// Scoring
-		moves++;
-		highScore = max(moves, highScore);
-		if (snake.growthLength == snake.gainFromFood - 1) {
-			moves = 1;
-		}
-
-		if (moves % shrinkFrame == 0) {
-			snake.shrink();
+			if (moves % shrinkFrame == 0) {
+				snake.shrink();
+			}
 		}
 
 		if (snake.dead) {
-			snake = new Snake(grid, food);
-			moves += 100;
-			frameSpeed = 17;
+			if (deadFrame == 0) {
+				// moves = 1;
+				snakeTraps++;
+			}
+			
+			if (deadFrame < deadPause) {
+				deadFrame++;
+				updateFood();
+				snake.show();
+			} else {
+				deadFrame = 0;
+				snake = new Snake(grid, food);
+				frameSpeed = difficultyFrameSpeeds[DIFFICULTY].frameSpeed;
+			}
+			
 		} else if (snake.won) {
-			return;
+			snake = new Snake(grid, food);
+			frameSpeed = difficultyFrameSpeeds[DIFFICULTY].frameSpeed;
 		}
+
 	}
 
 	showInfo();

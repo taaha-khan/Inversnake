@@ -32,11 +32,14 @@ class Grid {
 
 	show() {
 		for (let i = 0; i < this.cells.length; i++) {
-			fill(20);
 			stroke(50);
+			// fill(20);
+			noFill();
 			rect(this.cells[i].x - out / 2, this.cells[i].y - out / 2, this.scl, this.scl);
-			// ellipse(this.cells[i].x, this.cells[i].y, 5, 5);
+			// fill(255);
+			// ellipse(this.cells[i].x + scl / 2 - out / 2, this.cells[i].y + scl / 2 - out / 2, 5, 5);
 		}
+		strokeWeight(1);
 	}
 
 	randomPos() {

@@ -1,11 +1,27 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<title>Inverse Snake Game</title>
-		
-		<script src = "libraries/p5.js" type = "text/javascript"></script>
-		<script src = "libraries/dom.js" type = "text/javascript"></script>
 
+<html>
+
+	<head>
+		<title>InverSnake | Taaha Khan</title>
+
+		<meta charset = "utf-8" name = 'viewport' content = 'width=device-width' initial-scale = 1.0 maximum-scale = 1.0 user-scalable = 'no'>
+
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-47279086-2"></script>
+		<script>
+		  	window.dataLayer = window.dataLayer || [];
+		  	function gtag() {dataLayer.push(arguments); }
+		  	gtag('js', new Date());
+		  	gtag('config', 'UA-47279086-2');
+		</script>
+
+		<script src = "https://code.jquery.com/jquery-latest.min.js" type = "text/javascript"></script>
+		<script src = "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
+
+		<link href = "https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+
+		<script src = "assets/p5.min.js" type = "text/javascript"></script>
 		<script src = "sketch.js" type="text/javascript"></script>
 		<script src = "snake.js" type="text/javascript"></script>
 		<script src = "food.js" type="text/javascript"></script>
@@ -13,10 +29,32 @@
 		<script src = "cycle.js" type="text/javascript"></script>
 		<script src = "menu.js" type="text/javascript"></script>
 
-		<!-- <style>body{background-color:#141414;}</style> -->
+		<link rel = "stylesheet" type = "text/css" href = "../Styles/style.css">
+
+		<link rel = "shortcut icon" href = "assets/Inversnake-square.png"/>
 
 	</head>
 	
-	<body></body>
+	<body>
+
+		<nav>
+			<img src = "../Assets/Logos/logoc.png" id = "nav-icon" onclick = "location.href='../';">
+			<div class = "nav-title" onclick = "location.href='../';">TaahaKhan.com</div>
+			<div class = "nav-link" id = "home" onclick = "location.href='../';">Home</div>
+			<div class = "nav-link" id = "projects" onclick = "location.href='../Pages/projects.html';">Projects</div>
+			<div class = "nav-link" id = "skills" onclick = "location.href='../Pages/skills.html';">Skills</div>
+			<div class = "nav-link" id = "about" onclick = "location.href='../Pages/about.html';">About</div>
+
+			<script type = "text/javascript">
+				document.getElementById("projects").style.opacity = 1;
+			</script>
+		</nav>
+
+		<main>
+			<br><br>
+			<div id = "inversnake-canvas"></div>
+		</main>
+
+	</body>
 
 </html>

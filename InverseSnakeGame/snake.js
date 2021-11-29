@@ -13,20 +13,21 @@ class Snake {
 
 		this.food = food;
 		this.gainFromFood = 4;
-		this.growthLength = this.gainFromFood;
+		this.growthLength = 12;
 		this.drawnLength = 0;
 
 		this.dead = false;
 		this.won = false;
+		this.justAte = false
 		this.body = [];
 
 		this.simplify = false;
-		this.moveCloser = true;
 	}
 
 	show() {
 		fill(0, 150, 0);
 		noStroke();
+
 		rect(this.pos.x, this.pos.y, this.scl-out, this.scl-out);
 
 		for (let i = 0; i < this.body.length; i++) {
@@ -48,6 +49,7 @@ class Snake {
 
 	shrink() {
 		this.body.pop();
+		this.body.splice(0, 1);
 		this.drawnLength--;
 	}
 
@@ -70,10 +72,11 @@ class Snake {
 		if (this.body.length >= this.grid.length - 3) this.won = true
 
 		if (!this.won) {
-			if (this.pos.equals(this.food.pos)) {
+
+			this.justAte = this.pos.equals(this.food.pos)
+			if (this.justAte) {
 				this.growthLength += this.gainFromFood;
-				this.food.setPosition();
-				frameSpeed += frameSpeedIncrease;
+				this.food.setPosition(this);
 			}
 	
 			if (this.growthLength > 0) {
@@ -139,7 +142,7 @@ class Snake {
 					let nextPos = p5.Vector.add(this.pos, createVector(scl * i, scl * j));
 					if (this.canGo(nextPos) && [i, j].includes(0)) {
 						validMoves.push(nextPos);
-						let d = this.food.pos.dist(nextPos) + random(0.1);
+						let d = DIFFICULTY == 'Easy' ? this.food.pos.dist(nextPos) : Math.abs(nextPos.x - this.food.pos.x) + Math.abs(nextPos.y - this.food.pos.y);
 						// let d = Math.abs(nextPos.x - this.food.pos.x) + Math.abs(nextPos.y - this.food.pos.y);
 						if (d < bestDist) {
 							bestDir = nextPos;
@@ -155,6 +158,20 @@ class Snake {
 		}
 
 		return null;
+
+	}
+
+	FollowCycleGiven(given) {
+		let currIndex = 0;
+		for (let i = 0; i < given.length; i++) {
+			if (this.pos.equals(given[i])) {
+				currIndex = i;
+				break;
+			}
+		}
+		let nextIndex = currIndex + 1;
+		if (nextIndex >= given.length) nextIndex = 0;
+		this.toward(given[nextIndex]);
 
 	}
 

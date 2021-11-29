@@ -176,7 +176,7 @@ class HamiltonianCycle {
 			stroke(150);
 			strokeWeight(1);
 			for (let i = 0; i < this.cycle.length - 1; i++) {
-				line(this.cycle[i].x + this.sclh, this.cycle[i].y + this.sclh, this.cycle[i+1].x + this.sclh, this.cycle[i+1].y + this.sclh);
+				line(this.cycle[i].x + this.sclh - out / 2, this.cycle[i].y + this.sclh - out / 2, this.cycle[i+1].x + this.sclh - out / 2, this.cycle[i+1].y + this.sclh - out / 2);
 				// stroke(100);
 				// textSize(9);
 				// textWidth(0.01);

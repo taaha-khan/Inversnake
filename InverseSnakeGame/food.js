@@ -6,7 +6,7 @@ class Food {
 		this.pos = grid.randomPos().copy();
 	}
 
-	setPosition() {
+	setPosition(snake) {
 		let temp = grid.randomPos().copy();
 		while (snake.isInBody(temp) || snake.pos.equals(temp)) {
 			temp = grid.randomPos().copy();
@@ -15,9 +15,12 @@ class Food {
 	}
 
 	move(dir, blocked) {
-		let pos = p5.Vector.add(this.pos, dir)
-		if (!(vectorIsInArray(blocked, pos) || !vectorIsInArray(this.grid.cells, pos))) {
-			this.pos = pos;
+		/* Sliding off walls movement */
+		let pos = p5.Vector.add(this.pos, dir);
+		if (0 < pos.x && pos.x < width && !vectorIsInArray(blocked, createVector(pos.x, this.pos.y))) {
+			this.pos.x = pos.x
+		} if (0 < pos.y && pos.y < height && !vectorIsInArray(blocked, createVector(this.pos.x, pos.y))) {
+			this.pos.y = pos.y
 		}
 	}
 
