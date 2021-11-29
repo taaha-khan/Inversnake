@@ -1,5 +1,7 @@
 # Inversnake
 
+![](https://user-images.githubusercontent.com/61217792/143797410-1a74a635-4019-46f5-88ee-57059128ebab.png)
+
 ## Overview
 This game is a twist on the classic 'Snake Game'. In InverSnake, the player controls the apple, and must move it around to trap the hungry AI snake into a knot! With three difficulty levels, see how many times you can trap the snake, and how long you can survive. Try not to get eaten!\n\n\t - TaahaKhan.com
 
@@ -12,6 +14,8 @@ This game is a twist on the classic 'Snake Game'. In InverSnake, the player cont
 - **Easy:** Snake will move towards player, and is possible to tangle and kill. Speed will be slowed and constant
 - **Hard:** Snake will move quickly in the direction to cut off and block the player, and is still possible to kill. Speed will increase each time the food is eaten
 - **Impossible:** Snake will move quickly in the fastest perfect calculated route. It is unkillable, and will speed up more as the food is eaten.
+
+![](https://user-images.githubusercontent.com/61217792/143797473-f4c08448-03a2-4c0c-ac36-b09368cca7c0.png)
 
 ## Algorithm Overviews
 - **Easy:** Use a standard direct path movement algorithm, which picks one of the 3 moves at each step which minimizes the euclidean distance between the head and the food. It can easily be tricked with one-holes, corridors, and looping in on itself.
